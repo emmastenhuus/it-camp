@@ -10,7 +10,7 @@ stop - to stop the car
 quit - to exit game''')
     elif command == "start":
         if car_started:
-            print("Car is already started... Moron!")
+            print("Car is already started... Moron... Idiot!")
         else:
             print("Car started... Ready to go.")
             car_started = True
