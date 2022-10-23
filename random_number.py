@@ -8,7 +8,7 @@ max_guesses = int(input("How many guesses do you want? "))
 attempts = 0
 
 while attempts < max_guesses and guess != number:
-    attempts += 1
+    attempts = attempts + 1
     guess = int(input("Guess a number between 1 and 100: "))
     if guess == number:
         found_it = True
