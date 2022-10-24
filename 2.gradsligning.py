@@ -15,5 +15,3 @@ elif d == 0:
     print(f"Svaret er {x1}")
 else:
     print("Der er intet svar")
-    
-    

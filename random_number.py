@@ -1,7 +1,7 @@
 from random import randint
 
 number = randint(1, 100)
-guess = 0
+guess = None
 
 found_it = False
 max_guesses = int(input("How many guesses do you want? "))
