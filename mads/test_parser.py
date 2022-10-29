@@ -1,7 +1,11 @@
 import unittest
-from util.parser import to_infix_str, to_rpn_str
+from util.parser import to_infix_str, to_rpn_str, eval_expr
 
 class Test(unittest.TestCase):
+
+    def test_fact(self):
+        self.assertEqual(eval_expr("1*2*3*4*5*6*7"), eval_expr("fact(7)"))
+        self.assertEqual(eval_expr("1*2*3*4*5*6*7"), eval_expr("fact(b)", {"b" : 7}))
 
     def test_infix_str(self):
         self.assertEqual("a + b", to_infix_str("a+b"))
