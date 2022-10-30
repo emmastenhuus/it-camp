@@ -59,6 +59,10 @@ def fun7():
     res = pt.to_rpn_str()
     print(res)
 
+def fun8():
+    expr = "4*5*a*x"
+    print("derivative(" + expr + ") = " + derivative(expr) + " = " + derivative_reduce(expr))
+
 
 # fun1()
 # fun2()
@@ -66,7 +70,8 @@ def fun7():
 # fun4()
 # fun5()
 # fun6()
-fun7()
+# fun7()
+fun8()
 
 
 # TODO: Reduce expressions -- current implementation is very rudimentary

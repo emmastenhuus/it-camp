@@ -95,7 +95,7 @@ class ENode:
             elif fname == "inv":
                 return 1 / f3[0].evaluate(variables)
             elif fname == "fact":
-                return math.factorial(f3[0].evaluate(variables))
+                return float(math.factorial(round(f3[0].evaluate(variables))))
             else:
                 raise Exception("ERROR")
         else:
@@ -147,6 +147,10 @@ class ENode:
             op_type = n[1]
             r0 = f3[0].reduce()
             r1 = f3[1].reduce()
+            if r0.node[0] == NUM and r1.node[0] == NUM and op_type == "*":
+#                print(r0.node[0], r0.node[1])
+#                print(r1.node[0], r1.node[1])
+                return ENode((NUM, str(float(r0.node[1]) * float(r1.node[1])), 0, 0), None)
             if op_type == "+":
                 if r0.node[1] == "0":
                     return r1
@@ -168,7 +172,8 @@ class ENode:
                     return r0
                 else:
                     return ENode((OP, "*", 3, 1), [r0, r1])
-                    
+#            elif r0.node[0] == NUM:
+#                print(r0.node[0], r0.node[1])
                     
         return self
         

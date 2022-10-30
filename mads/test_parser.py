@@ -1,11 +1,14 @@
 import unittest
-from util.parser import to_infix_str, to_rpn_str, eval_expr
+from util.parser import to_infix_str, to_rpn_str, eval_expr, derivative_reduce
 
 class Test(unittest.TestCase):
 
     def test_fact(self):
         self.assertEqual(eval_expr("1*2*3*4*5*6*7"), eval_expr("fact(7)"))
         self.assertEqual(eval_expr("1*2*3*4*5*6*7"), eval_expr("fact(b)", {"b" : 7}))
+        self.assertEqual(eval_expr("2*1.1"), eval_expr("1.1+1.1"))
+        # print(derivative_reduce("x*x"))
+        # print(derivative_reduce("x+x"))
 
     def test_infix_str(self):
         self.assertEqual("a + b", to_infix_str("a+b"))
