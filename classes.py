@@ -1,6 +1,6 @@
 class Person:
     def __init__(self, nm, h = 180):
-        print("Constucting:", nm)
+        print("Constructing:", nm)
         self.name = nm
         self.height = h
         print("Done")
