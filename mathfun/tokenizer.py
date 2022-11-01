@@ -13,6 +13,10 @@ OPERATORS = ["+", "-", "*", "/"]
 PAREN_OPEN = "PARENTHESIS_OPEN"
 PAREN_CLOSE = "PARENTHESIS_CLOSE"
 
+CONSTANT = "CONSTANT"
+VARIABLE = "VARIABLE"
+OPERATOR = "OPERATOR"
+
 class Token():
     def __init__(self, t, v):
         self.type = t
@@ -32,14 +36,14 @@ def tokenize(expr: str) -> List[Token]:
                 index = index + 1 # Skip white space
             elif ch in NUMBERS:
                 constant = tokenize_constant(expr, index)
-                tokens.append(Token("CONSTANT", constant))
+                tokens.append(Token(CONSTANT, constant))
                 index = index + len(constant)
             elif ch in VARIABLES:
                 variable = tokenize_variable(expr, index)
-                tokens.append(Token("VARIABLE", variable))
+                tokens.append(Token(VARIABLE, variable))
                 index = index + len(variable)
             elif ch in OPERATORS:
-                tokens.append(Token("OPERATOR", ch))
+                tokens.append(Token(OPERATOR, ch))
                 index = index + 1
             elif ch == "(":
                 tokens.append(Token(PAREN_OPEN, ch))
@@ -73,3 +77,19 @@ def tokenize_variable(expr: str, index: int) -> str:
             return variable
         index = index + 1
     return variable
+
+def tokens2rpn(tokens: List[Token]) -> List[Token]:
+    rpn = []
+    stack = []
+    for token in tokens:
+        if token.type == CONSTANT or token.type == VARIABLE:
+            rpn.append(token)
+        elif token.type == OPERATOR:
+            stack.append(token) # TODO - this is way too simple!!!
+        else:
+            pass # TODO need to add rule for parentheses etc.
+
+    for stack_item in stack:
+        rpn.append(stack_item)
+
+    return rpn

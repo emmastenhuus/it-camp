@@ -1,5 +1,5 @@
 import unittest
-from tokenizer import Token, tokenize, tokenize_constant
+from tokenizer import Token, tokenize, tokenize_constant, tokens2rpn
 
 class TestTokenizer(unittest.TestCase):
 
@@ -55,6 +55,29 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual("PARENTHESIS_CLOSE", tokens[6].type)
 #        for t in tokens:
 #            print(t)
+
+    def test_0080_rpn(self):
+        # c1 = Token("CONSTANT", "7")
+        # op = Token("OPERATOR", "+")
+        # c2 = Token("CONSTANT", "2")
+        # tokens = [c1, op, c2]
+        tokens = tokenize("7 + 2")
+        rpn = tokens2rpn(tokens)
+        self.assertEqual(3, len(rpn))
+        self.assertEqual("7", rpn[0].val)
+        self.assertEqual("2", rpn[1].val)
+        self.assertEqual("+", rpn[2].val)
+
+        tokens = tokenize("7 + 2 - 5 + 1")
+        rpn = tokens2rpn(tokens)
+        self.assertEqual(7, len(rpn))
+        self.assertEqual("7", rpn[0].val)
+        self.assertEqual("2", rpn[1].val)
+        self.assertEqual("5", rpn[2].val)
+        self.assertEqual("1", rpn[3].val)
+        self.assertEqual("+", rpn[4].val)
+        self.assertEqual("-", rpn[5].val)
+        self.assertEqual("+", rpn[6].val) # FIXME!!!
 
 
 if __name__ == "__main__":
