@@ -1,10 +1,3 @@
-'''
-type
-VARIABLE
-OPERATOR
-CONSTANT
-val "sin" "17" "+" "*" 
-'''
 from typing import List
 
 VARIABLES = ["a", "b", "c", "x", "y", "z"]
@@ -21,8 +14,17 @@ class Token():
     def __init__(self, t, v):
         self.type = t
         self.val = v
+        if t == OPERATOR:
+            if v in ["+", "-"]:
+                self.precedence = 2
+            elif v in ["*", "/"]:
+                self.precedence = 1
+        else:
+            self.precedence = None
     def __str__(self):
         return "Token[" + self.type + ", " + self.val + "]"
+    def __repr__(self):
+        return "Token[" + self.type + ", " + self.val + ", " + str(self.precedence) + "]"
 
 def tokenize(expr: str) -> List[Token]:
     if expr == None or expr == "":
@@ -79,17 +81,20 @@ def tokenize_variable(expr: str, index: int) -> str:
     return variable
 
 def tokens2rpn(tokens: List[Token]) -> List[Token]:
-    rpn = []
-    stack = []
+    rpn: List[Token] = []
+    stack: List[Token] = []
+
     for token in tokens:
         if token.type == CONSTANT or token.type == VARIABLE:
             rpn.append(token)
         elif token.type == OPERATOR:
-            stack.append(token) # TODO - this is way too simple!!!
+            while len(stack) > 0 and stack[-1].precedence <= token.precedence:
+                rpn.append(stack.pop())
+            stack.append(token)
         else:
             pass # TODO need to add rule for parentheses etc.
 
-    for stack_item in stack:
+    for stack_item in reversed(stack):
         rpn.append(stack_item)
 
     return rpn
