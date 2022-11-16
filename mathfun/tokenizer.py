@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 VARIABLES = ["a", "b", "c", "x", "y", "z"]
 NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
@@ -19,12 +19,41 @@ class Token():
                 self.precedence = 2
             elif v in ["*", "/"]:
                 self.precedence = 1
+        elif t == PAREN_OPEN:
+            self.precedence = 10
         else:
             self.precedence = None
     def __str__(self):
         return "Token[" + self.type + ", " + self.val + "]"
     def __repr__(self):
         return "Token[" + self.type + ", " + self.val + ", " + str(self.precedence) + "]"
+
+class Node():
+    def __init__(self, val: str, left, right):
+        self.val = val
+        self.left = left
+        self.right = right
+    def __str__(self):
+        if self.left == None and self.right == None:
+            return self.val
+        else:
+            return "(" + str(self.left) + self.val + str(self.right) + ")"
+
+    def evaluate(self, dict: Dict) -> float:
+        if self.val in OPERATORS:
+            if self.val == "+":
+                return self.left.evaluate(dict) + self.right.evaluate(dict)
+            elif self.val == "-":
+                return self.left.evaluate(dict) - self.right.evaluate(dict)
+            elif self.val == "*":
+                return self.left.evaluate(dict) * self.right.evaluate(dict)
+            elif self.val == "/":
+                return self.left.evaluate(dict) / self.right.evaluate(dict)
+        else:
+            if self.val in dict.keys():
+                return float(dict[self.val])
+            else:
+                return float(self.val)
 
 def tokenize(expr: str) -> List[Token]:
     if expr == None or expr == "":
@@ -91,6 +120,14 @@ def tokens2rpn(tokens: List[Token]) -> List[Token]:
             while len(stack) > 0 and stack[-1].precedence <= token.precedence:
                 rpn.append(stack.pop())
             stack.append(token)
+        elif token.type == PAREN_OPEN:
+            stack.append(token)
+        elif token.type == PAREN_CLOSE:
+            while len(stack) > 0 and stack[-1].type != PAREN_OPEN:
+                rpn.append(stack.pop())
+            if len(stack) == 0:
+                pass # TODO - This is an error, should be handled
+            stack.pop()
         else:
             pass # TODO need to add rule for parentheses etc.
 
@@ -98,3 +135,16 @@ def tokens2rpn(tokens: List[Token]) -> List[Token]:
         rpn.append(stack_item)
 
     return rpn
+
+def rpn2nodes(rpn: List[Token]) -> List[Node]:
+    nodes: List[Node] = []
+
+    for token in rpn:
+        if token.type == CONSTANT or token.type == VARIABLE:
+            nodes.append(Node(token.val, None, None))
+        elif token.type == OPERATOR:
+            right_child = nodes.pop()
+            left_child = nodes.pop()
+            nodes.append(Node(token.val, left_child, right_child))
+
+    return nodes

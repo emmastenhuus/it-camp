@@ -1,5 +1,5 @@
 import unittest
-from tokenizer import Token, tokenize, tokenize_constant, tokens2rpn
+from tokenizer import Token, tokenize, tokenize_constant, tokens2rpn, rpn2nodes
 
 class TestTokenizer(unittest.TestCase):
 
@@ -82,13 +82,58 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual("/", rpn[3].val)
         self.assertEqual("+", rpn[4].val)
 
-    def test_0090_stack(self):
+    def test_0090_syntax_tree(self):
+        tokens = tokenize("7 + 2 / 5 * 8 - 9 + x / b")
+        self.assertEqual(13, len(tokens))
+        rpn = tokens2rpn(tokens)
+        self.assertEqual(13, len(rpn))
+        nodes = rpn2nodes(rpn)
+        self.assertEqual(1, len(nodes))
+        # print(nodes[0])
+        self.assertEqual("(((7+((2/5)*8))-9)+(x/b))", str(nodes[0]))
+
+    def test_0100_syntax_tree(self):
+        rpn = tokenize("a b c * +")
+        nodes = rpn2nodes(rpn)
+        self.assertEqual(1, len(nodes))
+        self.assertEqual("(a+(b*c))", str(nodes[0]))
+
+    def test_0110_stack(self):
         l = [3, 8, 1, 9]
         self.assertEqual(9, l.pop())
         self.assertEqual(1, l.pop())
         self.assertEqual(8, l.pop())
         self.assertEqual(3, l.pop())
         self.assertEqual(0, len(l))
+
+    def test_0120_syntax_tree(self):
+        tokens = tokenize("(a + b) * c")
+        self.assertEqual(7, len(tokens))
+        rpn = tokens2rpn(tokens)
+        self.assertEqual(5, len(rpn))
+        nodes = rpn2nodes(rpn)
+        self.assertEqual(1, len(nodes))
+        self.assertEqual("((a+b)*c)", str(nodes[0]))
+
+    def test_0130_syntax_tree(self):
+        tokens = tokenize("7 + 2 / (5 * 8 - 9 + x) / b")
+        self.assertEqual(15, len(tokens))
+        rpn = tokens2rpn(tokens)
+        self.assertEqual(13, len(rpn))
+        nodes = rpn2nodes(rpn)
+        self.assertEqual(1, len(nodes))
+        syntax_tree = nodes[0]
+        self.assertEqual("(7+((2/(((5*8)-9)+x))/b))", str(syntax_tree))
+        dict = {"b": 2, "x": 4}
+        print(syntax_tree.evaluate(dict))
+
+    def test_0140_syntax_tree(self):
+        tokens = tokenize("a / b")
+        rpn = tokens2rpn(tokens)
+        nodes = rpn2nodes(rpn)
+        syntax_tree = nodes[0]
+        dict = {"a": 2, "b": 5}
+        print(syntax_tree.evaluate(dict))
 
 
 if __name__ == "__main__":
