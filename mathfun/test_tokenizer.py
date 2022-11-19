@@ -1,5 +1,5 @@
 import unittest
-from tokenizer import Token, tokenize, tokenize_constant, tokens2rpn, rpn2nodes
+from tokenizer import Token, Variable, tokenize, tokenize_constant, tokens2rpn, rpn2nodes
 
 class TestTokenizer(unittest.TestCase):
 
@@ -134,6 +134,12 @@ class TestTokenizer(unittest.TestCase):
         syntax_tree = nodes[0]
         dict = {"a": 2, "b": 5}
         print(syntax_tree.evaluate(dict))
+
+    def test_0150_variable_node(self):
+        v1 = Variable("x")
+        print(v1)
+        print(v1.evaluate({"x": 7}))
+        
 
 
 if __name__ == "__main__":

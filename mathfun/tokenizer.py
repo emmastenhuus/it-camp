@@ -40,20 +40,42 @@ class Node():
             return "(" + str(self.left) + self.val + str(self.right) + ")"
 
     def evaluate(self, dict: Dict) -> float:
-        if self.val in OPERATORS:
-            if self.val == "+":
-                return self.left.evaluate(dict) + self.right.evaluate(dict)
-            elif self.val == "-":
-                return self.left.evaluate(dict) - self.right.evaluate(dict)
-            elif self.val == "*":
-                return self.left.evaluate(dict) * self.right.evaluate(dict)
-            elif self.val == "/":
-                return self.left.evaluate(dict) / self.right.evaluate(dict)
+        raise Exception("Go away!!!")
+
+class Operator(Node):
+    def __init__(self, val: str, left: Node, right: Node):
+        super().__init__(val, left, right)
+
+    def evaluate(self, dict: Dict) -> float:
+        if self.val == "+":
+            return self.left.evaluate(dict) + self.right.evaluate(dict)
+        elif self.val == "-":
+            return self.left.evaluate(dict) - self.right.evaluate(dict)
+        elif self.val == "*":
+            return self.left.evaluate(dict) * self.right.evaluate(dict)
+        elif self.val == "/":
+            return self.left.evaluate(dict) / self.right.evaluate(dict)
+
+class Variable(Node):
+    def __init__(self, val: str):
+        super().__init__(val, None, None)
+
+    def evaluate(self, dict: Dict) -> float:
+        if self.val in dict.keys():
+            return float(dict[self.val])
         else:
-            if self.val in dict.keys():
-                return float(dict[self.val])
-            else:
-                return float(self.val)
+            raise Exception("Unbound variable: " + self.val)
+
+class Constant(Node):
+    def __init__(self, val: str):
+        super().__init__(val, None, None)
+
+    def evaluate(self, dict: Dict) -> float:
+        return float(self.val)
+
+class Function(Node):
+    def __init__(self, val: str, left: Node):
+        super().__init__(val, left, None)
 
 def tokenize(expr: str) -> List[Token]:
     if expr == None or expr == "":
@@ -140,11 +162,13 @@ def rpn2nodes(rpn: List[Token]) -> List[Node]:
     nodes: List[Node] = []
 
     for token in rpn:
-        if token.type == CONSTANT or token.type == VARIABLE:
-            nodes.append(Node(token.val, None, None))
+        if token.type == CONSTANT:
+            nodes.append(Constant(token.val))
+        elif token.type == VARIABLE:
+            nodes.append(Variable(token.val))
         elif token.type == OPERATOR:
             right_child = nodes.pop()
             left_child = nodes.pop()
-            nodes.append(Node(token.val, left_child, right_child))
+            nodes.append(Operator(token.val, left_child, right_child))
 
     return nodes
