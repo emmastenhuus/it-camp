@@ -140,7 +140,23 @@ class TestTokenizer(unittest.TestCase):
         print(v1)
         print(v1.evaluate({"x": 7}))
         
+    def test_0160_variable_node(self):
+        v1 = Variable("a")
+        print(v1)
+        print(v1.derivative("x"))
+        v2 = Variable("x")
+        print(v2)
+        print(v2.derivative("x"))
 
+    def test_0160_variable_node(self):
+        tokens = tokenize("2 * x - x * x")
+        rpn = tokens2rpn(tokens)
+        nodes = rpn2nodes(rpn)
+        expr = nodes[0]
+        print(expr)
+        print(expr.evaluate({"x": 4}))
+        print(expr.derivative("x"))
+        print(expr.derivative("x").evaluate({"x": 4}))
 
 if __name__ == "__main__":
     unittest.main()

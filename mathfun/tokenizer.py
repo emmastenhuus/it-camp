@@ -41,6 +41,9 @@ class Node():
 
     def evaluate(self, dict: Dict) -> float:
         raise Exception("Go away!!!")
+    
+    def derivative(self, var: str):
+        raise Exception("Go away!!!")
 
 class Operator(Node):
     def __init__(self, val: str, left: Node, right: Node):
@@ -56,6 +59,16 @@ class Operator(Node):
         elif self.val == "/":
             return self.left.evaluate(dict) / self.right.evaluate(dict)
 
+    def derivative(self, var: str) -> Node:
+        if self.val == "+":
+            return Operator("+", self.left.derivative(var), self.right.derivative(var))
+        elif self.val == "-":
+            return Operator("-", self.left.derivative(var), self.right.derivative(var))
+        elif self.val == "*":
+            return Operator("+", Operator("*", self.left.derivative(var), self.right), Operator("*", self.left, self.right.derivative(var)))
+        elif self.val == "/":
+            return Operator("/", Operator("-", Operator("*", self.left.derivative(var), self.right), Operator("*", self.left, self.right.derivative(var))), Operator("*", self.right, self.right))
+
 class Variable(Node):
     def __init__(self, val: str):
         super().__init__(val, None, None)
@@ -66,12 +79,22 @@ class Variable(Node):
         else:
             raise Exception("Unbound variable: " + self.val)
 
+    def derivative(self, var: str) -> Node:
+        if self.val == var:
+            return Constant("1")
+        else:
+            return Constant("0")
+
+
 class Constant(Node):
     def __init__(self, val: str):
         super().__init__(val, None, None)
 
     def evaluate(self, dict: Dict) -> float:
         return float(self.val)
+
+    def derivative(self, var: str) -> Node:
+        return Constant("0")
 
 class Function(Node):
     def __init__(self, val: str, left: Node):
