@@ -125,7 +125,7 @@ class TestTokenizer(unittest.TestCase):
         syntax_tree = nodes[0]
         self.assertEqual("(7+((2/(((5*8)-9)+x))/b))", str(syntax_tree))
         dict = {"b": 2, "x": 4}
-        print(syntax_tree.evaluate(dict))
+        self.assertAlmostEqual(7.0285714, syntax_tree.evaluate(dict))
 
     def test_0140_syntax_tree(self):
         tokens = tokenize("a / b")
@@ -133,30 +133,35 @@ class TestTokenizer(unittest.TestCase):
         nodes = rpn2nodes(rpn)
         syntax_tree = nodes[0]
         dict = {"a": 2, "b": 5}
-        print(syntax_tree.evaluate(dict))
-
-    def test_0150_variable_node(self):
-        v1 = Variable("x")
-        print(v1)
-        print(v1.evaluate({"x": 7}))
+        self.assertAlmostEqual(0.4, syntax_tree.evaluate(dict))
         
-    def test_0160_variable_node(self):
+    def test_0150_variable_node(self):
         v1 = Variable("a")
-        print(v1)
-        print(v1.derivative("x"))
+        self.assertEqual("0", str(v1.derivative("x")))
         v2 = Variable("x")
-        print(v2)
-        print(v2.derivative("x"))
+        self.assertEqual("1", str(v2.derivative("x")))
 
     def test_0160_variable_node(self):
-        tokens = tokenize("2 * x - x * x")
+        tokens = tokenize("2 * x + x * x")
         rpn = tokens2rpn(tokens)
         nodes = rpn2nodes(rpn)
         expr = nodes[0]
         print(expr)
-        print(expr.evaluate({"x": 4}))
-        print(expr.derivative("x"))
-        print(expr.derivative("x").evaluate({"x": 4}))
+        d = expr.derivative("x")
+        print(d)
+        print(d.reduce())
+        print(d.reduce().reduce())
+
+    def test_0170_reduce(self):
+        tokens = tokenize("2+0 + x")
+        rpn = tokens2rpn(tokens)
+        nodes = rpn2nodes(rpn)
+        expr = nodes[0]
+        self.assertEqual("(2+x)", str(expr.reduce()))
+
+    def test_0180_reduce(self):
+        expr = rpn2nodes(tokens2rpn(tokenize("((0+2)+(x+x))")))[0]
+        self.assertEqual("(2+(x+x))", str(expr.reduce()))
 
 if __name__ == "__main__":
     unittest.main()

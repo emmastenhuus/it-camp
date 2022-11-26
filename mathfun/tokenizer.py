@@ -45,6 +45,9 @@ class Node():
     def derivative(self, var: str):
         raise Exception("Go away!!!")
 
+    def reduce(self):
+        return self
+
 class Operator(Node):
     def __init__(self, val: str, left: Node, right: Node):
         super().__init__(val, left, right)
@@ -68,6 +71,28 @@ class Operator(Node):
             return Operator("+", Operator("*", self.left.derivative(var), self.right), Operator("*", self.left, self.right.derivative(var)))
         elif self.val == "/":
             return Operator("/", Operator("-", Operator("*", self.left.derivative(var), self.right), Operator("*", self.left, self.right.derivative(var))), Operator("*", self.right, self.right))
+
+    def reduce(self) -> Node:
+        if self.val == "+":
+            if isinstance(self.left, Constant) and self.left.val == "0":
+                return self.right.reduce()
+            elif isinstance(self.right, Constant) and self.right.val == "0":
+                return self.left.reduce()
+            else:
+                return Operator("+", self.left.reduce(), self.right.reduce())
+        if self.val == "*":
+            if isinstance(self.left, Constant) and self.left.val == "0":
+                return Constant("0")
+            elif isinstance(self.right, Constant) and self.right.val == "0":
+                return Constant("0")
+            elif isinstance(self.left, Constant) and self.left.val == "1":
+                return self.right.reduce()
+            elif isinstance(self.right, Constant) and self.right.val == "1":
+                return self.left.reduce()
+            else:
+                return Operator("*", self.left.reduce(), self.right.reduce())
+        return self
+
 
 class Variable(Node):
     def __init__(self, val: str):
