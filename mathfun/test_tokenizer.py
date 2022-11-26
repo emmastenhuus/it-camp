@@ -149,19 +149,23 @@ class TestTokenizer(unittest.TestCase):
         print(expr)
         d = expr.derivative("x")
         print(d)
-        print(d.reduce())
-        print(d.reduce().reduce())
+        (r1, b1) = d.reduce()
+        print(r1)
+        # print(d.reduce().reduce())
 
     def test_0170_reduce(self):
         tokens = tokenize("2+0 + x")
         rpn = tokens2rpn(tokens)
         nodes = rpn2nodes(rpn)
         expr = nodes[0]
-        self.assertEqual("(2+x)", str(expr.reduce()))
+        (r, b) = expr.reduce()
+        self.assertEqual("(2+x)", str(r))
+        self.assertFalse(b)
 
     def test_0180_reduce(self):
-        expr = rpn2nodes(tokens2rpn(tokenize("((0+2)+(x+x))")))[0]
-        self.assertEqual("(2+(x+x))", str(expr.reduce()))
+        expr = rpn2nodes(tokens2rpn(tokenize("((b*2)*(x*(0*x*8+6*(30444+22)*0))")))[0]
+        (r, b) = expr.reduce()
+        self.assertEqual("0", str(r))
 
 if __name__ == "__main__":
     unittest.main()

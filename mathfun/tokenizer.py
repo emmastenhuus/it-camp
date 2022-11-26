@@ -46,7 +46,7 @@ class Node():
         raise Exception("Go away!!!")
 
     def reduce(self):
-        return self
+        return (self, False)
 
 class Operator(Node):
     def __init__(self, val: str, left: Node, right: Node):
@@ -72,26 +72,40 @@ class Operator(Node):
         elif self.val == "/":
             return Operator("/", Operator("-", Operator("*", self.left.derivative(var), self.right), Operator("*", self.left, self.right.derivative(var))), Operator("*", self.right, self.right))
 
-    def reduce(self) -> Node:
+    def reduce(self): # -> Tuple(Node, bool): # The boolean return value is "True" iff the syntax tree was reduced
         if self.val == "+":
             if isinstance(self.left, Constant) and self.left.val == "0":
-                return self.right.reduce()
+                (rr, _) = self.right.reduce()
+                return (rr, True)
             elif isinstance(self.right, Constant) and self.right.val == "0":
-                return self.left.reduce()
+                (lr, _) = self.left.reduce()
+                return (lr, True)
             else:
-                return Operator("+", self.left.reduce(), self.right.reduce())
+                (lr, left_trigger_reduce) = self.left.reduce()
+                (rr, right_trigger_reduce) = self.right.reduce()
+                if left_trigger_reduce == True or right_trigger_reduce == True:
+                    return Operator("+", lr, rr).reduce()
+                else:
+                    return (Operator("+", lr, rr), False)
         if self.val == "*":
             if isinstance(self.left, Constant) and self.left.val == "0":
-                return Constant("0")
+                return (Constant("0"), True)
             elif isinstance(self.right, Constant) and self.right.val == "0":
-                return Constant("0")
+                return (Constant("0"), True)
             elif isinstance(self.left, Constant) and self.left.val == "1":
-                return self.right.reduce()
+                (rr, _) = self.right.reduce()
+                return (rr, True)
             elif isinstance(self.right, Constant) and self.right.val == "1":
-                return self.left.reduce()
+                (lr, _) = self.right.reduce()
+                return (lr, True)
             else:
-                return Operator("*", self.left.reduce(), self.right.reduce())
-        return self
+                (lr, left_trigger_reduce) = self.left.reduce()
+                (rr, right_trigger_reduce) = self.right.reduce()
+                if left_trigger_reduce == True or right_trigger_reduce == True:
+                    return Operator("*", lr, rr).reduce()
+                else:
+                    return (Operator("*", lr, rr), False)
+        return (self, False)
 
 
 class Variable(Node):
