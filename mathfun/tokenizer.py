@@ -1,7 +1,8 @@
 from typing import List, Dict
+from math import gcd
 
 VARIABLES = ["a", "b", "c", "x", "y", "z"]
-NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
+NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 OPERATORS = ["+", "-", "*", "/"]
 PAREN_OPEN = "PARENTHESIS_OPEN"
 PAREN_CLOSE = "PARENTHESIS_CLOSE"
@@ -80,13 +81,17 @@ class Operator(Node):
             elif isinstance(self.right, Constant) and self.right.val == "0":
                 (lr, _) = self.left.reduce()
                 return (lr, True)
-            else:
-                (lr, left_trigger_reduce) = self.left.reduce()
-                (rr, right_trigger_reduce) = self.right.reduce()
-                if left_trigger_reduce == True or right_trigger_reduce == True:
-                    return Operator("+", lr, rr).reduce()
-                else:
-                    return (Operator("+", lr, rr), False)
+            elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
+                return (Constant(str(int(self.left.val) + int(self.right.val))), True)
+        if self.val == "-":
+            # if isinstance(self.left, Constant) and self.left.val == "0":
+                # (rr, _) = self.right.reduce()
+                # return (rr, True)
+            if isinstance(self.right, Constant) and self.right.val == "0":
+                (lr, _) = self.left.reduce()
+                return (lr, True)
+            elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
+                return (Constant(str(int(self.left.val) - int(self.right.val))), True)
         if self.val == "*":
             if isinstance(self.left, Constant) and self.left.val == "0":
                 return (Constant("0"), True)
@@ -96,16 +101,40 @@ class Operator(Node):
                 (rr, _) = self.right.reduce()
                 return (rr, True)
             elif isinstance(self.right, Constant) and self.right.val == "1":
-                (lr, _) = self.right.reduce()
+                (lr, _) = self.left.reduce()
                 return (lr, True)
-            else:
-                (lr, left_trigger_reduce) = self.left.reduce()
-                (rr, right_trigger_reduce) = self.right.reduce()
-                if left_trigger_reduce == True or right_trigger_reduce == True:
-                    return Operator("*", lr, rr).reduce()
+            elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
+                return (Constant(str(int(self.left.val) * int(self.right.val))), True)
+        if self.val == "/":
+            if isinstance(self.left, Constant) and self.left.val == "0":
+                return (Constant("0"), True)
+            elif isinstance(self.right, Constant) and self.right.val == "0":
+                raise Exception("Division by 0")
+            # elif isinstance(self.left, Constant) and self.left.val == "1":
+                # (rr, _) = self.right.reduce()
+                # return (rr, True)
+            elif isinstance(self.right, Constant) and self.right.val == "1":
+                (lr, _) = self.left.reduce()
+                return (lr, True)
+            elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
+                nominator = int(self.left.val)
+                denominator = int(self.right.val)
+                if nominator % denominator == 0:
+                    return (Constant(str(int(nominator / denominator))), True)
                 else:
-                    return (Operator("*", lr, rr), False)
-        return (self, False)
+                    # Where is Euclid when you need him the most???
+                    divisor = gcd(nominator, denominator)
+                    l = Constant(str(int(nominator / divisor)))
+                    r = Constant(str(int(denominator / divisor)))
+                    return (Operator("/", l, r), True if divisor > 1 else False)
+
+        # Catch-all for all operators - try to reduce both left and right child
+        (lr, left_trigger_reduce) = self.left.reduce()
+        (rr, right_trigger_reduce) = self.right.reduce()
+        if left_trigger_reduce == True or right_trigger_reduce == True:
+            return Operator(self.val, lr, rr).reduce()
+        else:
+            return (Operator(self.val, lr, rr), False)
 
 
 class Variable(Node):
@@ -234,3 +263,9 @@ def rpn2nodes(rpn: List[Token]) -> List[Node]:
             nodes.append(Operator(token.val, left_child, right_child))
 
     return nodes
+
+def rpn2syntax_tree(rpn: List[Token]) -> List[Node]:
+    nodes: List[Node] = rpn2nodes(rpn)
+    if len(nodes) != 1:
+        raise Exception("Unexpected tokens in input, length: " + str(len(nodes)))
+    return nodes[0]

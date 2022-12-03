@@ -1,5 +1,5 @@
 import unittest
-from tokenizer import Token, Variable, tokenize, tokenize_constant, tokens2rpn, rpn2nodes
+from tokenizer import Token, Variable, tokenize, tokenize_constant, tokens2rpn, rpn2nodes, rpn2syntax_tree
 
 class TestTokenizer(unittest.TestCase):
 
@@ -27,14 +27,14 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual("65", t0.val)
 
     def test_0050_constant(self):
-        self.assertEqual("6.7", tokenize_constant("  6.7abcsdf", 2))
-        self.assertEqual("", tokenize_constant("  6.7abcsdf", 6))
-        self.assertEqual("", tokenize_constant("  6.7abcsdf", 56))
-        self.assertEqual("4.8", tokenize_constant(" abcsdf 4.8", 8))
-        self.assertEqual("119.4", tokenize_constant("119.4 abcsdf 4.8", 0))
+        self.assertEqual("6", tokenize_constant("  6abcsdf", 2))
+        self.assertEqual("", tokenize_constant("  6abcsdf", 6))
+        self.assertEqual("", tokenize_constant("  6abcsdf", 56))
+        self.assertEqual("4", tokenize_constant(" abcsdf 4", 8))
+        self.assertEqual("119", tokenize_constant("119 abcsdf 4", 0))
 
     def test_0060_expr(self):
-        tokens = tokenize("  x  *3.14159   ")
+        tokens = tokenize("  x  *3   ")
         self.assertEqual(3, len(tokens))
 
         t0 = tokens[0]
@@ -47,10 +47,10 @@ class TestTokenizer(unittest.TestCase):
         
         t2 = tokens[2]
         self.assertEqual("CONSTANT", t2.type)
-        self.assertEqual("3.14159", t2.val)
+        self.assertEqual("3", t2.val)
 
     def test_0070_expr(self):
-        tokens = tokenize(" 4 * ( x+ 19.7) / 8 +   b")
+        tokens = tokenize(" 4 * ( x+ 19) / 8 +   b")
         self.assertEqual(11, len(tokens))
         self.assertEqual("PARENTHESIS_CLOSE", tokens[6].type)
 
@@ -166,6 +166,21 @@ class TestTokenizer(unittest.TestCase):
         expr = rpn2nodes(tokens2rpn(tokenize("((b*2)*(x*(0*x*8+6*(30444+22)*0))")))[0]
         (r, b) = expr.reduce()
         self.assertEqual("0", str(r))
+
+    def test_0190_reduce_const(self):
+        expr = rpn2syntax_tree(tokens2rpn(tokenize("2+3+(4*5)-7")))
+        (r, b) = expr.reduce()
+        self.assertEqual("18", str(r))
+
+    def test_0200_reduce_division(self):
+        expr = rpn2syntax_tree(tokens2rpn(tokenize("8/2")))
+        (r, b) = expr.reduce()
+        self.assertEqual("4", str(r))
+
+        expr = rpn2syntax_tree(tokens2rpn(tokenize("x * ((1 +2 * 7 - 2 +4) /(7*17+0*33))")))
+        (r, b) = expr.reduce()
+        self.assertEqual("(x*(1/7))", str(r))
+
 
 if __name__ == "__main__":
     unittest.main()
