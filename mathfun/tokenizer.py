@@ -95,16 +95,28 @@ class Operator(Node):
         if self.val == "*":
             if isinstance(self.left, Constant) and self.left.val == "0":
                 return (Constant("0"), True)
-            elif isinstance(self.right, Constant) and self.right.val == "0":
-                return (Constant("0"), True)
+#            elif isinstance(self.right, Constant) and self.right.val == "0":
+#                return (Constant("0"), True)
             elif isinstance(self.left, Constant) and self.left.val == "1":
                 (rr, _) = self.right.reduce()
                 return (rr, True)
-            elif isinstance(self.right, Constant) and self.right.val == "1":
-                (lr, _) = self.left.reduce()
-                return (lr, True)
+#            elif isinstance(self.right, Constant) and self.right.val == "1":
+#                (lr, _) = self.left.reduce()
+#                return (lr, True)
             elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
                 return (Constant(str(int(self.left.val) * int(self.right.val))), True)
+            elif isinstance(self.right, Constant):
+                (lr, left_trigger_reduce) = self.left.reduce()
+                new_op = Operator("*", self.right, lr) # Swap the operands
+                return new_op.reduce()
+                # if left_trigger_reduce == True:
+                #     return new_op.reduce()
+                # else:
+                #     return (new_op, True)
+            elif isinstance(self.right, Operator) and self.right.val == "/" and isinstance(self.right.left, Constant) and self.right.left.val == "1":
+                (lr, _) = self.left.reduce()
+                (rrr, _) = self.right.right.reduce()
+                return (Operator("/", lr, rrr), True)
         if self.val == "/":
             if isinstance(self.left, Constant) and self.left.val == "0":
                 return (Constant("0"), True)
@@ -269,3 +281,6 @@ def rpn2syntax_tree(rpn: List[Token]) -> List[Node]:
     if len(nodes) != 1:
         raise Exception("Unexpected tokens in input, length: " + str(len(nodes)))
     return nodes[0]
+
+def str2expr(expression_str: str) -> Node:
+    return rpn2syntax_tree(tokens2rpn(tokenize(expression_str)))

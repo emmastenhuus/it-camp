@@ -1,5 +1,5 @@
 import unittest
-from tokenizer import Token, Variable, tokenize, tokenize_constant, tokens2rpn, rpn2nodes, rpn2syntax_tree
+from tokenizer import Token, Variable, tokenize, tokenize_constant, tokens2rpn, rpn2nodes, rpn2syntax_tree, str2expr
 
 class TestTokenizer(unittest.TestCase):
 
@@ -163,24 +163,45 @@ class TestTokenizer(unittest.TestCase):
         self.assertFalse(b)
 
     def test_0180_reduce(self):
-        expr = rpn2nodes(tokens2rpn(tokenize("((b*2)*(x*(0*x*8+6*(30444+22)*0))")))[0]
-        (r, b) = expr.reduce()
-        self.assertEqual("0", str(r))
+        e1 = str2expr("(b*7)")
+        (r1, b1) = e1.reduce()
+        self.assertEqual("(7*b)", str(r1))
+
+        e2 = rpn2nodes(tokens2rpn(tokenize("((b*2)*(x*(0*x*8+6*(30444+22)*0))")))[0]
+        (r2, b2) = e2.reduce()
+        self.assertEqual("0", str(r2))
+
+        e3 = str2expr("(b*0)")
+        (r3, b3) = e3.reduce()
+        self.assertEqual("0", str(r3))
 
     def test_0190_reduce_const(self):
         expr = rpn2syntax_tree(tokens2rpn(tokenize("2+3+(4*5)-7")))
         (r, b) = expr.reduce()
         self.assertEqual("18", str(r))
+        self.assertTrue(b)
 
     def test_0200_reduce_division(self):
         expr = rpn2syntax_tree(tokens2rpn(tokenize("8/2")))
         (r, b) = expr.reduce()
         self.assertEqual("4", str(r))
 
-        expr = rpn2syntax_tree(tokens2rpn(tokenize("x * ((1 +2 * 7 - 2 +4) /(7*17+0*33))")))
+        expr = str2expr("x * ((1 +2 * 7 - 2 +4) /(7*17+0*33))")
         (r, b) = expr.reduce()
-        self.assertEqual("(x*(1/7))", str(r))
+        self.assertEqual("(x/7)", str(r))
+    
+    def test_0210_reduce(self):
+        e1 = str2expr("a*(1/7)")
+        (r1, b1) = e1.reduce()
+        self.assertEqual("(a/7)", str(r1))
 
+        e2 = str2expr("2*a*3")
+        (r2, b2) = e2.reduce()
+        self.assertEqual("(3*(2*a))", str(r2))
+
+        e3 = str2expr("a*7")
+        (r3, b3) = e3.reduce()
+        self.assertEqual("(7*a)", str(r3))
 
 if __name__ == "__main__":
     unittest.main()
