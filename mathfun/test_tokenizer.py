@@ -197,11 +197,16 @@ class TestTokenizer(unittest.TestCase):
 
         e2 = str2expr("2*a*3")
         (r2, b2) = e2.reduce()
-        self.assertEqual("(3*(2*a))", str(r2))
+        self.assertEqual("(6*a)", str(r2))
 
         e3 = str2expr("a*7")
         (r3, b3) = e3.reduce()
         self.assertEqual("(7*a)", str(r3))
+
+        e4 = str2expr("3*(6/a)")
+        (r4, b4) = e4.reduce()
+        self.assertEqual("(18/a)", str(r4))
+
 
 if __name__ == "__main__":
     unittest.main()

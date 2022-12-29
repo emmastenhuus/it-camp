@@ -123,6 +123,13 @@ class Operator(Node):
             (lr, _) = self.left.reduce()
             (rrr, _) = self.right.right.reduce()
             return (Operator("/", lr, rrr), True)
+        elif isinstance(self.left, Constant) and (self.right.val == "*" or self.right.val == "/") and isinstance(self.right.left, Constant):
+            const_mult_op = Operator("*", self.left, self.right.left)
+            (c, _) = const_mult_op.reduce()
+            (rrr, _) = self.right.right.reduce()
+            new_op = Operator(self.right.val, c, rrr)
+            return (new_op, True)
+
         return self.reduce_generic()
 
     def reduce_divide(self):
