@@ -75,79 +75,88 @@ class Operator(Node):
 
     def reduce(self): # -> Tuple(Node, bool): # The boolean return value is "True" iff the syntax tree was reduced
         if self.val == "+":
-            if isinstance(self.left, Constant) and self.left.val == "0":
-                (rr, _) = self.right.reduce()
-                return (rr, True)
-            elif isinstance(self.right, Constant) and self.right.val == "0":
-                (lr, _) = self.left.reduce()
-                return (lr, True)
-            elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
-                return (Constant(str(int(self.left.val) + int(self.right.val))), True)
+            return self.reduce_add()
         if self.val == "-":
-            # if isinstance(self.left, Constant) and self.left.val == "0":
-                # (rr, _) = self.right.reduce()
-                # return (rr, True)
-            if isinstance(self.right, Constant) and self.right.val == "0":
-                (lr, _) = self.left.reduce()
-                return (lr, True)
-            elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
-                return (Constant(str(int(self.left.val) - int(self.right.val))), True)
+            return self.reduce_subtract()
         if self.val == "*":
-            if isinstance(self.left, Constant) and self.left.val == "0":
-                return (Constant("0"), True)
-#            elif isinstance(self.right, Constant) and self.right.val == "0":
-#                return (Constant("0"), True)
-            elif isinstance(self.left, Constant) and self.left.val == "1":
-                (rr, _) = self.right.reduce()
-                return (rr, True)
-#            elif isinstance(self.right, Constant) and self.right.val == "1":
-#                (lr, _) = self.left.reduce()
-#                return (lr, True)
-            elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
-                return (Constant(str(int(self.left.val) * int(self.right.val))), True)
-            elif isinstance(self.right, Constant):
-                (lr, left_trigger_reduce) = self.left.reduce()
-                new_op = Operator("*", self.right, lr) # Swap the operands
-                return new_op.reduce()
-                # if left_trigger_reduce == True:
-                #     return new_op.reduce()
-                # else:
-                #     return (new_op, True)
-            elif isinstance(self.right, Operator) and self.right.val == "/" and isinstance(self.right.left, Constant) and self.right.left.val == "1":
-                (lr, _) = self.left.reduce()
-                (rrr, _) = self.right.right.reduce()
-                return (Operator("/", lr, rrr), True)
+            return self.reduce_multiply()
         if self.val == "/":
-            if isinstance(self.left, Constant) and self.left.val == "0":
-                return (Constant("0"), True)
-            elif isinstance(self.right, Constant) and self.right.val == "0":
-                raise Exception("Division by 0")
-            # elif isinstance(self.left, Constant) and self.left.val == "1":
-                # (rr, _) = self.right.reduce()
-                # return (rr, True)
-            elif isinstance(self.right, Constant) and self.right.val == "1":
-                (lr, _) = self.left.reduce()
-                return (lr, True)
-            elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
-                nominator = int(self.left.val)
-                denominator = int(self.right.val)
-                if nominator % denominator == 0:
-                    return (Constant(str(int(nominator / denominator))), True)
-                else:
-                    # Where is Euclid when you need him the most???
-                    divisor = gcd(nominator, denominator)
-                    l = Constant(str(int(nominator / divisor)))
-                    r = Constant(str(int(denominator / divisor)))
-                    return (Operator("/", l, r), True if divisor > 1 else False)
+            return self.reduce_divide()
+        else:
+            raise Exception("Unsupported operator")
 
-        # Catch-all for all operators - try to reduce both left and right child
+    def reduce_add(self):
+        if isinstance(self.left, Constant) and self.left.val == "0":
+            (rr, _) = self.right.reduce()
+            return (rr, True)
+        elif isinstance(self.right, Constant) and self.right.val == "0":
+            (lr, _) = self.left.reduce()
+            return (lr, True)
+        elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
+            return (Constant(str(int(self.left.val) + int(self.right.val))), True)
+        return self.reduce_generic()
+
+    def reduce_subtract(self):
+        # if isinstance(self.left, Constant) and self.left.val == "0":
+            # (rr, _) = self.right.reduce()
+            # return (rr, True)
+        if isinstance(self.right, Constant) and self.right.val == "0":
+            (lr, _) = self.left.reduce()
+            return (lr, True)
+        elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
+            return (Constant(str(int(self.left.val) - int(self.right.val))), True)
+        return self.reduce_generic()
+
+    def reduce_multiply(self):
+        if isinstance(self.left, Constant) and self.left.val == "0":
+            return (Constant("0"), True)
+        elif isinstance(self.left, Constant) and self.left.val == "1":
+            (rr, _) = self.right.reduce()
+            return (rr, True)
+        elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
+            return (Constant(str(int(self.left.val) * int(self.right.val))), True)
+        elif isinstance(self.right, Constant):
+            (lr, left_trigger_reduce) = self.left.reduce()
+            new_op = Operator("*", self.right, lr)  # Swap the operands
+            return new_op.reduce()  # The if statement that checks for "two constants" guarantees that this does not recurse indefinitely
+        elif isinstance(self.right, Operator) and self.right.val == "/" and isinstance(self.right.left, Constant) and self.right.left.val == "1":
+            (lr, _) = self.left.reduce()
+            (rrr, _) = self.right.right.reduce()
+            return (Operator("/", lr, rrr), True)
+        return self.reduce_generic()
+
+    def reduce_divide(self):
+        if isinstance(self.left, Constant) and self.left.val == "0":
+            return (Constant("0"), True)
+        elif isinstance(self.right, Constant) and self.right.val == "0":
+            raise Exception("Division by 0")
+        # elif isinstance(self.left, Constant) and self.left.val == "1":
+            # (rr, _) = self.right.reduce()
+            # return (rr, True)
+        elif isinstance(self.right, Constant) and self.right.val == "1":
+            (lr, _) = self.left.reduce()
+            return (lr, True)
+        elif isinstance(self.left, Constant) and isinstance(self.right, Constant):
+            nominator = int(self.left.val)
+            denominator = int(self.right.val)
+            if nominator % denominator == 0:
+                return (Constant(str(int(nominator / denominator))), True)
+            else:
+                # Where is Euclid when you need him the most???
+                divisor = gcd(nominator, denominator)
+                l = Constant(str(int(nominator / divisor)))
+                r = Constant(str(int(denominator / divisor)))
+                return (Operator("/", l, r), True if divisor > 1 else False)
+        return self.reduce_generic()
+
+    # Catch-all for all operators - try to reduce both left and right child, and (conditional) trigger a new "reduce"
+    def reduce_generic(self):
         (lr, left_trigger_reduce) = self.left.reduce()
         (rr, right_trigger_reduce) = self.right.reduce()
         if left_trigger_reduce == True or right_trigger_reduce == True:
             return Operator(self.val, lr, rr).reduce()
         else:
             return (Operator(self.val, lr, rr), False)
-
 
 class Variable(Node):
     def __init__(self, val: str):
